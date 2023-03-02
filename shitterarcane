@@ -22,7 +22,6 @@ local Settings = {
     Undetect = false;
     InfDash = false;
     LoadedFarm = false;
-    God = false;
     MobToFarm = "";
     MobFarm = false;
     ModDetector = false;
@@ -304,13 +303,6 @@ MiscSection:AddToggle({
     end;
 })
 
-MiscSection:AddToggle({
-    Name = "Godmode",
-    Callback = function(x)
-        Settings.God = x;
-    end;
-})
-
 local Group = 3596833
 MiscSection:AddToggle({
     Name = "Mod Detector",
@@ -418,23 +410,6 @@ spawn(function()
             end);
         end;
     end;
-end);
-
-spawn(function()
-    local namecall; namecall = hookmetamethod(game, '__namecall', function(object, ...)
-    local args = {...}
-
-    if getnamecallmethod() == "FireServer" then
-        if Settings.God then
-            if object.Name == 'DealWeaponDamage' or object.Name == "DealStrengthDamage" and args[3] == game.Players.LocalPlayer.Character then
-                args[3] = math.random(1,200);
-            elseif object.Name == 'DealBossDamage' or object.Name == "DealAttackDamage" and args[2] == game.Players.LocalPlayer.Character then
-                    args[2] = math.random(1,200);
-                end;
-            end;
-        end;
-    return namecall(object, unpack(args));
-    end);
 end);
 
 spawn(function()
