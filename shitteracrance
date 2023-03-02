@@ -1,0 +1,506 @@
+pcall(function()
+    for i,v in ipairs(game.CoreGui:GetChildren()) do 
+        if v.Name == "     " then 
+            v:Destroy()
+        end;
+    end;
+end);
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/unknxwnlocal/ui/main/word"))()
+local Wait = library.subs.Wait -- Only returns if the GUI has not been terminated. For 'while Wait() do' loops
+
+local localscripts = library:CreateWindow({
+        Name = "Local",
+        Image = "",
+        Themeable = {
+        Info = "Discord: local#4459"
+    }
+})
+
+local Settings = {
+    Killaura = false;
+    Undetect = false;
+    InfDash = false;
+    LoadedFarm = false;
+    God = false;
+    MobToFarm = "";
+    MobFarm = false;
+    ModDetector = false;
+    WeaponFarm = "";
+    ChestAura = false;
+    Fame = "Positive";
+    FruitFarm = false;
+    ASV = false;
+    ASM = false;
+    ASS = false;
+    ASW = false;
+    TeleportTo = "Dawn Island";
+}
+
+local signal = game.ReplicatedStorage.RS.Remotes.Misc.OnTeleport.OnClientEvent
+local load = nil
+
+for index, connection in next, getconnections(signal) do -- Made by DYLAN not me
+    local env = connection.Function and getfenv(connection.Function)
+
+    if env and tostring(rawget(env, "script")) == "Unloading" then
+        load = debug.getupvalue(connection.Function, 2)
+        break
+    end
+end
+
+local LoadNPC = nil
+
+for index, connection in next, getconnections(game.ReplicatedStorage.RS.Remotes.Misc.OnTeleport.OnClientEvent) do -- Made by DYLAN not me
+    if connection.Function and tostring(rawget(getfenv(connection.Function), "script")) == "SetupNPCs" then
+        LoadNPC = hookfunction(debug.getupvalue(connection.Function, 6), function(...)
+            if not checkcaller() then
+                return
+            end LoadNPC(...)
+        end)
+    end
+end
+
+local MainTab = localscripts:CreateTab({
+    Name = "Main"
+})
+
+
+local FarmingSection = MainTab:CreateSection({
+    Name = "Farming",
+    Side = "Left"
+})
+local MiscSection = MainTab:CreateSection({
+    Name = "Misc",
+    Side = "Left"
+})
+
+
+local TeleportSection = MainTab:CreateSection({
+    Name = "Teleports",
+    Side = "Left"
+})
+
+local AutoSection = MainTab:CreateSection({
+    Name = "Auto Stats",
+    Side = "Right"
+})
+
+FarmingSection:AddDropdown({
+    Name = "Select your Fame",
+    List = {"Positive","Negative"},
+    Callback = function(x)
+        Settings.Fame = x;
+    end;
+})
+
+local getclosestmob = function()
+    local MaxDistance= math.huge
+    local ClosestObject
+    pcall(function()
+        for i, v in pairs(game.workspace.Enemies:GetChildren()) do
+            local MinDistance = MaxDistance
+            if not v:FindFirstChild("DeadRagdoll") and Settings.LoadedFarm and v.Attributes.Health.Value > 0 and v.Name ~= "Shark" and not v:FindFirstChild("Prompt") and not v:FindFirstChild("JailMark") and not v:FindFirstChild("JailedAt") and v:FindFirstChild("Data") and v.Data:FindFirstChild("RenownType") and tostring(v.Data.RenownType.Value) ~= Settings.Fame or v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                local dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude
+                if dist < MinDistance then
+                    MinDistance, ClosestObject = dist, v
+                end
+            end
+        end
+    end);
+    return ClosestObject
+ end
+
+FarmingSection:AddToggle({
+    Name = "All Mob Farm",
+    Callback = function(x)
+        Settings.LoadedFarm = x;
+        spawn(function()
+            while task.wait() and Settings.LoadedFarm do 
+                pcall(function()
+                    local p = getclosestmob()
+                    if p and Settings.LoadedFarm then 
+                        repeat task.wait(0.5)
+                            LoadNPC(p,p.HumanoidRootPart.Position)
+                            load(p.HumanoidRootPart.Position,false)
+                            game.Players.LocalPlayer.Character.PrimaryPart.CFrame = p.HumanoidRootPart.CFrame
+                        until p:FindFirstChild("DeadRagdoll") or not Settings.LoadedFarm or p.Attributes.Health.Value <= 0 or not p or not p.Parent
+                    end;
+                end);
+            end;
+        end);
+    end;
+})
+
+local Mobed = {}
+for i,v in ipairs(game.Workspace.Enemies:GetChildren()) do 
+    for g,e in ipairs(game:GetService("ReplicatedStorage").RS.UnloadEnemies:GetChildren()) do 
+        for _,i in ipairs(game:GetService("ReplicatedStorage").RS.Bosses:GetChildren()) do 
+            if not table.find(Mobed,v.Name) then
+                table.insert(Mobed,v.Name)
+                table.sort(Mobed)
+            end;
+            if not table.find(Mobed,e.Name) then
+                table.insert(Mobed,e.Name)
+                table.sort(Mobed)
+            end;
+            if not table.find(Mobed,i.Name) then
+                table.insert(Mobed,i.Name)
+                table.sort(Mobed)
+            end;
+        end;
+    end;
+end;
+
+FarmingSection:AddDropdown({
+    Name = "Select a Mob",
+    List = Mobed,
+    Callback = function(x)
+        Settings.MobToFarm = x;
+    end;
+})
+
+FarmingSection:AddToggle({
+    Name = "Mob Farm",
+    Callback = function(x)
+        Settings.MobFarm = x;
+        spawn(function()
+            while task.wait() and Settings.MobFarm do 
+                pcall(function()
+                    for i,v in ipairs(game.Workspace.Enemies:GetChildren()) do 
+                        if not v:FindFirstChild("DeadRagdoll") and Settings.MobFarm and v.Name == Settings.MobToFarm then 
+                            repeat task.wait(1)
+                                LoadNPC(v,v.HumanoidRootPart.Position)
+                                game.Players.LocalPlayer.Character.PrimaryPart.CFrame = v.HumanoidRootPart.CFrame
+                            until v:FindFirstChild("DeadRagdoll") or not Settings.MobFarm or v.Attributes.Health.Value <= 0
+                        end;
+                    end;
+                end);
+            end;
+        end);
+    end;
+})
+
+local getclosestfruit = function()
+    local MaxDistance= math.huge
+    local ClosestObject
+    pcall(function()
+        for i, v in pairs(game.workspace:GetChildren()) do
+            local MinDistance = MaxDistance
+            if v.Name == "Fruit" and v:IsA("Part") then
+                local dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Position).Magnitude
+                if dist < MinDistance then
+                    MinDistance, ClosestObject = dist, v
+                end
+            end
+        end
+    end);
+    return ClosestObject
+ end
+ 
+
+FarmingSection:AddToggle({
+    Name = "Fruit Farm",
+    Callback = function(x)
+        Settings.FruitFarm = x;
+        spawn(function()
+            while task.wait(1) and Settings.FruitFarm do 
+                pcall(function()
+                    local p = getclosestfruit()
+                    if p and Settings.FruitFarm then
+                        repeat task.wait()
+                            load(p.Position, false)
+                            game.Players.LocalPlayer.Character.PrimaryPart.CFrame = p.CFrame
+                            if game.Players.LocalPlayer:DistanceFromCharacter(p.Position) <= 10 then 
+                                fireproximityprompt(p.Prompt)
+                            end;
+                        until not Settings.FruitFarm or not p
+                    end;
+                end);
+            end;
+        end);
+    end;
+})
+
+FarmingSection:AddToggle({
+    Name = "Chest Farm",
+    Callback = function(x)
+        Settings.ChestFarm = x;
+        spawn(function()
+            while task.wait(5) and Settings.ChestFarm do 
+                for i,v in ipairs(game.Workspace:GetChildren()) do 
+                    if v.Name == "Great Sailor Chest" or v.Name == "Elite Sailor Chest" or v.Name == "Golden Chest" and not v:FindFirstChild("Open") and Settings.ChestFarm then 
+                        for _,g in ipairs(v:GetChildren()) do 
+                            if g:FindFirstChild("Prompt") and Settings.ChestFarm then
+                                load(g.Position,false)
+                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame
+                                wait(0.5)
+                                game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end);
+    end;
+})
+
+FarmingSection:AddToggle({
+    Name = "Chest Aura",
+    Callback = function(x)
+        Settings.ChestAura = x;
+        spawn(function()
+            while task.wait() and Settings.ChestAura do 
+                for i,v in ipairs(game.Workspace:GetChildren()) do 
+                    if string.find(v.Name,"Chest") and not v:FindFirstChild("Open") and Settings.ChestAura then 
+                        for _,g in ipairs(v:GetChildren()) do 
+                            if g:FindFirstChild("Prompt") and Settings.ChestAura and game.Players.LocalPlayer:DistanceFromCharacter(g.Position) <= 10 then
+                                game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end);
+    end;
+})
+
+FarmingSection:AddToggle({
+    Name = "Kill Aura",
+    Callback = function(x)
+        Settings.Killaura = x;
+        while task.wait() and Settings.Killaura do 
+            for i,v in ipairs(game.Workspace.Enemies:GetChildren()) do 
+                pcall(function()
+                    if v:FindFirstChild("HumanoidRootPart") and not v:FindFirstChild("DeadRagdoll") and game.Players.LocalPlayer:DistanceFromCharacter(v.HumanoidRootPart.Position) <= 20 and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then 
+                        game:GetService("ReplicatedStorage").RS.Remotes.Combat.DealWeaponDamage:FireServer(0,game.Players.LocalPlayer.Character,v,game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"),"Slash")
+                    end;
+                end);
+            end;
+        end;
+    end;
+})
+
+FarmingSection:AddLabel({
+    Name = "^ Put weapon in slot 1 (Dagger)"
+})
+
+MiscSection:AddToggle({
+    Name = "Anti Target",
+    Callback = function(x)
+        Settings.Undetect = x;
+        while wait() and Settings.Undetect do 
+            pcall(function()
+                game:GetService("Players").LocalPlayer.PlayerScripts.NPCAI:Destroy()
+            end);
+        end;
+    end;
+})
+
+MiscSection:AddToggle({
+    Name = "Unlimited Dash",
+    Callback = function(x)
+        Settings.InfDash = x;
+    end;
+})
+
+MiscSection:AddToggle({
+    Name = "Godmode",
+    Callback = function(x)
+        Settings.God = x;
+    end;
+})
+
+local Group = 3596833
+MiscSection:AddToggle({
+    Name = "Mod Detector",
+    Callback = function(x)
+        Settings.ModDetector = x;
+        Group = 3596833
+        for i,v in ipairs(game.Players:GetChildren()) do 
+            if Settings.ModDetector and v:IsA("Player") and v:IsInGroup(Group) and v:GetRoleInGroup(3596833) == "🎤 Game Moderator" or v:GetRoleInGroup(3596833) == "📃 Group Manager" or v:GetRoleInGroup(3596833) == "📜 Developer" then 
+                game:GetService("Players").LocalPlayer:Kick(tostring(v).." joined (Staff)")
+            end;
+        end;
+    end;
+})
+
+MiscSection:AddButton({
+    Name = "Respawn",
+    Callback = function(x)
+        pcall(function()
+            game.Players.LocalPlayer.Character.Head.Neck:Destroy()
+        end);
+    end;
+})
+
+
+local Islands = {}
+for i,v in ipairs(game.Workspace.Map:GetChildren()) do 
+    if v:FindFirstChild("DetailsLoaded") and not table.find(Islands, v.Name) then 
+        table.insert(Islands, v.Name)
+        table.sort(Islands)
+    end;
+end;
+
+TeleportSection:AddDropdown({
+    Name = "Select a Place to Teleport",
+    List = Islands,
+    Callback = function(x)
+        Settings.TeleportTo = x;
+    end;
+})
+
+TeleportSection:AddButton({
+    Name = "Teleport to Island",
+    Callback = function()
+        load(game.Workspace.Map:FindFirstChild(Settings.TeleportTo).Center.Position, false)
+        for i,v in ipairs(game.Workspace.Map:FindFirstChild(Settings.TeleportTo):GetChildren()) do 
+            if v.Name == "Notes" and v:FindFirstChild("Note") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v:FindFirstChild("Note").Note.CFrame
+            end;
+        end;
+    end;
+})
+
+AutoSection:AddToggle({
+    Name = "Stat Vitality",
+    Callback = function(x)
+        Settings.ASV = x;
+        while wait() and Settings.ASV do 
+            game:GetService("ReplicatedStorage").RS.Remotes.UI.SpendSP:InvokeServer("Vitality")
+        end;
+    end;
+})
+
+AutoSection:AddToggle({
+    Name = "Stat Magic",
+    Callback = function(x)
+        Settings.ASM = x;
+        while wait() and Settings.ASM do 
+            game:GetService("ReplicatedStorage").RS.Remotes.UI.SpendSP:InvokeServer("Magic")
+        end;
+    end;
+})
+
+AutoSection:AddToggle({
+    Name = "Stat Strength",
+    Callback = function(x)
+        Settings.ASS = x;
+        while wait() and Settings.ASS do 
+            game:GetService("ReplicatedStorage").RS.Remotes.UI.SpendSP:InvokeServer("Strength")
+        end;
+    end;
+})
+
+AutoSection:AddToggle({
+    Name = "Stat Weapons",
+    Callback = function(x)
+        Settings.ASW = x;
+        while wait() and Settings.ASW do 
+            game:GetService("ReplicatedStorage").RS.Remotes.UI.SpendSP:InvokeServer("Weapons")
+        end;
+    end;
+})
+
+
+spawn(function()
+    while task.wait() do 
+        if Settings.Killaura then
+            pcall(function()
+                for i,v in ipairs(game.Workspace.Enemies:GetChildren()) do 
+                    pcall(function()
+                        if v:FindFirstChild("LOADED") and v:FindFirstChild("HumanoidRootPart") and not v:FindFirstChild("DeadRagdoll") and game.Players.LocalPlayer:DistanceFromCharacter(v.HumanoidRootPart.Position) <= 20 then 
+                            game:GetService("ReplicatedStorage").RS.Remotes.Combat.DealWeaponDamage:FireServer(0,game.Players.LocalPlayer.Character,v,game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"),"Slash")
+                        end;
+                    end);
+                end;
+            end);
+        end;
+    end;
+end);
+
+spawn(function()
+    local namecall; namecall = hookmetamethod(game, '__namecall', function(object, ...)
+    local args = {...}
+
+    if getnamecallmethod() == "FireServer" then
+        if Settings.God then
+            if object.Name == 'DealWeaponDamage' or object.Name == "DealStrengthDamage" and args[3] == game.Players.LocalPlayer.Character then
+                args[3] = math.random(1,200);
+            elseif object.Name == 'DealBossDamage' or object.Name == "DealAttackDamage" and args[2] == game.Players.LocalPlayer.Character then
+                    args[2] = math.random(1,200);
+                end;
+            end;
+        end;
+    return namecall(object, unpack(args));
+    end);
+end);
+
+spawn(function()
+    while wait(2) do 
+        if Settings.LoadedFarm or Settings.MobFarm  then
+            for i,v in ipairs(game:GetService("ReplicatedStorage").RS.UnloadEnemies:GetChildren()) do 
+                v.Parent = game.Workspace.Enemies
+            end;
+        end;
+    end;
+end);
+
+spawn(function()
+    while wait(2) do 
+        if Settings.LoadedFarm or Settings.MobFarm  then
+            for i,v in ipairs(game:GetService("ReplicatedStorage").RS.Bosses:GetChildren()) do 
+                v.Parent = game.Workspace.Enemies
+            end;
+        end;
+    end;
+end);
+
+spawn(function()
+    while wait(1) do 
+        pcall(function()
+            if not game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") and Settings.Killaura then
+                game:GetService('VirtualInputManager'):SendKeyEvent(true, "One", false, game) 
+            end;
+        end);
+    end;
+end);
+
+spawn(function()
+    while wait(1) and Settings.ChestFarm or Settings.ChestAura do 
+        if Settings.ChestFarm or Settings.ChestAura then
+            for i,v in ipairs(game.Workspace.Map:GetDescendants()) do 
+                if string.find(v.Name,"Chest") then 
+                    v.Parent = game.Workspace
+                end;
+            end;
+        end;
+    end;
+end);
+
+spawn(function()
+    while wait(1) do 
+        if Settings.FruitFarm then
+            for i,v in ipairs(game.Workspace.Map:GetDescendants()) do 
+                if v.Name == "Fruit" and v:IsA("Part") then 
+                    v.Parent = game.Workspace
+                end;
+            end;
+        end;
+    end;
+end);
+
+game:GetService("Players").ChildAdded:Connect(function(player)
+    if Settings.ModDetector and player:IsA("Player") and player:IsInGroup(Group) and player:GetRoleInGroup(3596833) == "🎤 Game Moderator" or player:GetRoleInGroup(3596833) == "📃 Group Manager" or player:GetRoleInGroup(3596833) == "📜 Developer" then
+        game:GetService("Players").LocalPlayer:Kick(tostring(player).." joined (Staff)")
+    end
+end)
+
+spawn(function()
+    while wait() do 
+        if not game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            game.Players.LocalPlayer.Character.Humanoid.Health = 0
+        end;
+    end;
+end);
