@@ -226,15 +226,22 @@ FarmingSection:AddToggle({
     Callback = function(x)
         Settings.ChestFarm = x;
         spawn(function()
-            while task.wait(5) and Settings.ChestFarm do 
+            while task.wait() and Settings.ChestFarm do 
                 for i,v in ipairs(game.Workspace:GetChildren()) do 
                     if v.Name == "Great Sailor Chest" or v.Name == "Elite Sailor Chest" or v.Name == "Golden Chest" and not v:FindFirstChild("Open") and Settings.ChestFarm then 
                         for _,g in ipairs(v:GetChildren()) do 
-                            if g:FindFirstChild("Prompt") and Settings.ChestFarm then
-                                load(g.Position,false)
-                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame
-                                wait(0.5)
-                                game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
+                            if g:FindFirstChild("Prompt") and not v:FindFirstChild("Open") and Settings.ChestFarm then
+                                repeat wait(5)
+                                    if v:FindFirstChild("Open") then break end
+                                    pcall(function()
+                                    load(g.Position,false)
+                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame
+                                    wait(0.5)
+                                    if g:FindFirstChild("Prompt") and game.Players.LocalPlayer:DistanceFromCharacter(g.Position) <= 10 then
+                                        game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
+                                    end;
+                                    end);
+                                until v:FindFirstChild("Open") or not Settings.ChestFarm
                             end;
                         end;
                     end;
@@ -443,7 +450,7 @@ spawn(function()
 end);
 
 spawn(function()
-    while wait(1) and Settings.ChestFarm or Settings.ChestAura do 
+    while wait(1) do 
         if Settings.ChestFarm or Settings.ChestAura then
             for i,v in ipairs(game.Workspace.Map:GetDescendants()) do 
                 if string.find(v.Name,"Chest") then 
