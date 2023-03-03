@@ -33,6 +33,7 @@ local Settings = {
     ASM = false;
     ASS = false;
     ASW = false;
+    ChestESP = false;
     TeleportTo = "Dawn Island";
 }
 
@@ -64,6 +65,10 @@ local MainTab = localscripts:CreateTab({
     Name = "Main"
 })
 
+local ESPTab = localscripts:CreateTab({
+    Name = "ESP"
+})
+
 
 local FarmingSection = MainTab:CreateSection({
     Name = "Farming",
@@ -83,6 +88,11 @@ local TeleportSection = MainTab:CreateSection({
 local AutoSection = MainTab:CreateSection({
     Name = "Auto Stats",
     Side = "Right"
+})
+
+local ESPSection = ESPTab:CreateSection({
+    Name = "Auto Stats",
+    Side = "Left"
 })
 
 FarmingSection:AddDropdown({
@@ -150,6 +160,32 @@ for i,v in ipairs(game.Workspace.Enemies:GetChildren()) do
         end;
     end;
 end;
+
+function addui(part,part2)
+    local partui = Instance.new("BillboardGui",part2)
+    partui.Size = UDim2.new(1,0,1,0)
+    partui.AlwaysOnTop = true
+    partui.Name = "Item-Esp"
+    local frame = Instance.new("Frame",partui)
+    frame.BackgroundColor3 = Color3.fromRGB(255,80,60)
+    frame.BackgroundTransparency = 0.75
+    frame.BorderSizePixel = 0
+    local namegui = Instance.new("BillboardGui",part2)
+    namegui.Size = UDim2.new(3,0,1.5,0)
+    namegui.SizeOffset = Vector2.new(0,1)
+    namegui.AlwaysOnTop = true
+    namegui.Name = "Name"
+    local text = Instance.new("TextLabel",namegui)
+    text.Text = part.Name
+    text.TextColor3 = Color3.fromRGB(255,80,60)
+    text.TextTransparency = 0.25
+    text.BackgroundTransparency = 1
+    text.TextScaled = true 
+    text.Size = UDim2.new(2,0,2,0)
+    text.Font = Enum.Font.GothamSemibold
+    text.Name = part.Name
+end;
+
 
 FarmingSection:AddDropdown({
     Name = "Select a Mob",
@@ -234,12 +270,12 @@ FarmingSection:AddToggle({
                                 repeat wait(5)
                                     if v:FindFirstChild("Open") then break end
                                     pcall(function()
-                                    load(g.Position,false)
-                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame
-                                    wait(0.5)
-                                    if g:FindFirstChild("Prompt") and game.Players.LocalPlayer:DistanceFromCharacter(g.Position) <= 10 then
-                                        game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
-                                    end;
+                                        load(g.Position,false)
+                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = g.CFrame
+                                        wait(0.5)
+                                        if g:FindFirstChild("Prompt") and game.Players.LocalPlayer:DistanceFromCharacter(g.Position) <= 10 then
+                                            game:GetService("ReplicatedStorage").RS.Remotes.Misc.OpenChest:FireServer(v)
+                                        end;
                                     end);
                                 until v:FindFirstChild("Open") or not Settings.ChestFarm
                             end;
@@ -402,6 +438,53 @@ AutoSection:AddToggle({
     end;
 })
 
+ESPSection:AddToggle({
+    Name = "Chest ESP",
+    Callback = function(x)
+        Settings.ChestESP = x;
+        spawn(function()
+            if not Settings.ChestESP then 
+                for i,v in ipairs(game.Workspace:GetChildren()) do 
+                    if string.find(v.Name,"Chest") then 
+                        for _,g in ipairs(v:GetChildren()) do 
+                            if string.find(v.Name,"Chest") and g:FindFirstChild("Item-Esp") then 
+                                for _,p in ipairs(g:GetChildren()) do 
+                                    if p:IsA("BillboardGui") then 
+                                        p:Destroy()
+                                    end;
+                                end;
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end);
+        spawn(function()
+            while task.wait() and Settings.ChestESP do 
+                for i,v in ipairs(game.Workspace:GetChildren()) do 
+                    if string.find(v.Name,"Chest") and not v:FindFirstChild("Open") and Settings.ChestESP then 
+                        for _,g in ipairs(v:GetChildren()) do 
+                            if g.Name == "Base" and not g:FindFirstChild("Item-Esp") then 
+                                addui(v,g)
+                            end;
+                        end;
+                    elseif string.find(v.Name,"Chest") and v:FindFirstChild("Open") and Settings.ChestESP then 
+                        pcall(function()
+                            for _,g in ipairs(v:GetChildren()) do 
+                                for _,p in ipairs(g:GetChildren()) do 
+                                    if p.Name == "Name" or p.Name == "Item-Esp" then 
+                                        p:Destroy()
+                                    end;
+                                end;
+                            end;
+                        end);
+                    end;
+                end;
+            end;
+        end);
+    end;
+})
+
 
 spawn(function()
     while task.wait() do 
@@ -451,7 +534,7 @@ end);
 
 spawn(function()
     while wait(1) do 
-        if Settings.ChestFarm or Settings.ChestAura then
+        if Settings.ChestFarm or Settings.ChestAura or Settings.ChestESP then
             for i,v in ipairs(game.Workspace.Map:GetDescendants()) do 
                 if string.find(v.Name,"Chest") then 
                     v.Parent = game.Workspace
