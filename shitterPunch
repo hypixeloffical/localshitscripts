@@ -20,7 +20,7 @@ local localscripts = library:CreateWindow({
 local Settings = {
     AutoStrength = false;
     AutoWin = false;
-    Settings.Last = "";
+    Last = "";
 }
 
 local MainTab = localscripts:CreateTab({
