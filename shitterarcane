@@ -51,16 +51,6 @@ end
 
 local LoadNPC = nil
 
-for index, connection in next, getconnections(game.ReplicatedStorage.RS.Remotes.Misc.OnTeleport.OnClientEvent) do -- Made by DYLAN not me
-    if connection.Function and tostring(rawget(getfenv(connection.Function), "script")) == "SetupNPCs" then
-        LoadNPC = hookfunction(debug.getupvalue(connection.Function, 6), function(...)
-            if not checkcaller() then
-                return
-            end LoadNPC(...)
-        end)
-    end
-end
-
 local MainTab = localscripts:CreateTab({
     Name = "Main"
 })
