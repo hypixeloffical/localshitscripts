@@ -40,12 +40,14 @@ local Settings = {
 local signal = game.ReplicatedStorage.RS.Remotes.Misc.OnTeleport.OnClientEvent
 local load = nil
 
-for index, connection in next, getconnections(signal) do -- Made by DYLAN not me
-    local env = connection.Function and getfenv(connection.Function)
-
-    if env and tostring(rawget(env, "script")) == "Unloading" then
-        load = debug.getupvalue(connection.Function, 2)
-        break
+if getconnections and debug.getupvalue then
+    for index, connection in next, getconnections(signal) do -- Made by DYLAN not me
+        local env = connection.Function and getfenv(connection.Function)
+    
+        if env and tostring(rawget(env, "script")) == "Unloading" then
+            load = debug.getupvalue(connection.Function, 2)
+            break
+        end
     end
 end
 
